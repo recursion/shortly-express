@@ -2,7 +2,7 @@ var express = require('express');
 var util = require('./lib/utility');
 var partials = require('express-partials');
 var bodyParser = require('body-parser');
-
+var session = require('express-session');
 
 var db = require('./app/config');
 var Users = require('./app/collections/users');
@@ -21,7 +21,14 @@ app.use(bodyParser.json());
 // Parse forms (signup/login)
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(__dirname + '/public'));
+app.use(session({
+  secret: 'mouserat'
+}));
 
+app.use(function(req, res, next) {
+  console.log(req.session.user);
+  next();
+});
 
 app.get('/',
 function(req, res) {
@@ -86,11 +93,17 @@ app.post('/login', function(req, res) {
   var password = req.body.password;
 
   // check database for existing user
+
   // password = hashed(password);
   new User ({username: username, password: password}).fetch().then(function(found) {
     if (found) {
       // your authed bro
-      res.redirect('/');
+      // create a session? log into session?
+      req.session.regenerate(function(err) {
+        if (err) throw err;
+        req.session.user = username;
+        res.redirect('/');
+      });
     } else {
       // failcake
       res.send(404, 'Invalid username and password.');
