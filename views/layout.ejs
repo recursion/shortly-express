@@ -15,6 +15,9 @@
 
   <body>
     <h1>Shortly</h1>
+    <% if (authed){ %>
+      <a href="/logout">Logout</a>
+    <% } %>
     <%- body %>
   </body>
 </html>

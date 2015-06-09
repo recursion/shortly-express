@@ -3,6 +3,7 @@ var util = require('./lib/utility');
 var partials = require('express-partials');
 var bodyParser = require('body-parser');
 var session = require('express-session');
+var bcrypt = require('bcrypt-nodejs');
 
 var db = require('./app/config');
 var Users = require('./app/collections/users');
@@ -13,10 +14,15 @@ var Click = require('./app/models/click');
 
 var app = express();
 
-var restrict = function(req, res) {
+// TODO: localize to user model
+// var salt = bcrypt.genSaltSync(10);
+
+var authorize = function(req, res) {
   if (!req.session.user) {
     res.redirect('/login');
   }
+
+  return true;
 };
 
 var createSession = function(req, res, username) {
@@ -46,19 +52,19 @@ app.use(session({
 
 app.get('/',
 function(req, res) {
-  restrict(req, res);
-  res.render('index');
+  var authed = authorize(req, res);
+  res.render('index', {authed: authed});
 });
 
 app.get('/create',
 function(req, res) {
-  restrict(req, res);
-  res.render('index');
+  var authed = authorize(req, res);
+  res.render('index', {authed: authed});
 });
 
 app.get('/links',
 function(req, res) {
-  restrict(req, res);
+  var authed = authorize(req, res);
   Links.reset().fetch().then(function(links) {
     res.send(200, links.models);
   });
@@ -66,7 +72,7 @@ function(req, res) {
 
 app.post('/links',
 function(req, res) {
-  restrict(req, res);
+  authorize(req, res);
   var uri = req.body.url;
 
   if (!util.isValidUrl(uri)) {
@@ -102,8 +108,14 @@ function(req, res) {
 /************************************************************/
 // Write your authentication routes here
 /************************************************************/
+
+app.get('/logout', function(req, res) {
+  req.session.destroy();
+  res.redirect('/login');
+});
+
 app.get('/login', function(req, res) {
-  res.render('login');
+  res.render('login', {authed: false});
 });
 
 app.post('/login', function(req, res) {
@@ -113,11 +125,25 @@ app.post('/login', function(req, res) {
   // password = hashed(password);
 
   // Check that user exists and hashed password matches
-  new User ({username: username, password: password}).fetch().then(function(found) {
-    if (found) {
-      // your authed bro
-      // create a session? log into session?
-      createSession(req, res, username);
+  // hash user password
+    // check user and password against db entry
+
+  new User ({username: username}).fetch().then(function(model) {
+    if (model) {
+      // retrieve salt
+      var salt = model.get('salt');
+      // compare hashed password
+      bcrypt.hash(password, salt, null, function(err, encrypted) {
+        if (err) throw err;
+
+        if (encrypted === model.get('password')) {
+          //you're in!
+          createSession(req, res, username);
+        } else {
+          //failcake
+          res.redirect('/login');
+        }
+      });
     } else {
       // failcake
       res.redirect('/login');
@@ -127,7 +153,7 @@ app.post('/login', function(req, res) {
 });
 
 app.get('/signup', function(req, res) {
-  res.render('signup');
+  res.render('signup', {authed: false});
 });
 
 app.post('/signup', function(req, res) {
@@ -138,13 +164,21 @@ app.post('/signup', function(req, res) {
     if (found) {
       res.send(400, 'User ' + username +  ' already exists!');
     } else {
-      var user = new User({
-        username: username, password: password
-      });
+      // create user salt
+      // attach to user model
+      // this may need to be done async eventually
+      var salt = bcrypt.genSaltSync(10);
+      bcrypt.hash(password, salt, null, function(err, result) {
+        var user = new User({
+          username: username,
+          password: result,
+          salt: salt
+        });
 
-      user.save().then(function(user) {
-        Users.add(user);
-        createSession(req, res, username);
+        user.save().then(function(user) {
+          Users.add(user);
+          createSession(req, res, username);
+        });
       });
     }
   });
