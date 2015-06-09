@@ -85,6 +85,23 @@ app.post('/login', function(req, res) {
   var username = req.body.username;
   var password = req.body.password;
 
+  // check database for existing user
+  // password = hashed(password);
+  new User ({username: username, password: password}).fetch().then(function(found) {
+    if (found) {
+      // your authed bro
+      res.redirect('/');
+    } else {
+      // failcake
+      res.send(404, 'Invalid username and password.');
+    }
+  });
+    // verify password is correct
+      // alert user to incorrect password
+
+      // or login
+
+  // alert to incorrect login
 
 });
 
