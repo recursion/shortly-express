@@ -21,8 +21,6 @@ var authorize = function(req, res) {
   if (!req.session.user) {
     res.redirect('/login');
   }
-
-  return true;
 };
 
 var createSession = function(req, res, username) {
@@ -52,19 +50,19 @@ app.use(session({
 
 app.get('/',
 function(req, res) {
-  var authed = authorize(req, res);
-  res.render('index', {authed: authed});
+  authorize(req, res);
+  res.render('index');
 });
 
 app.get('/create',
 function(req, res) {
-  var authed = authorize(req, res);
-  res.render('index', {authed: authed});
+  authorize(req, res);
+  res.render('index');
 });
 
 app.get('/links',
 function(req, res) {
-  var authed = authorize(req, res);
+  authorize(req, res);
   Links.reset().fetch().then(function(links) {
     res.send(200, links.models);
   });
@@ -115,7 +113,7 @@ app.get('/logout', function(req, res) {
 });
 
 app.get('/login', function(req, res) {
-  res.render('login', {authed: false});
+  res.render('login');
 });
 
 app.post('/login', function(req, res) {
@@ -153,7 +151,7 @@ app.post('/login', function(req, res) {
 });
 
 app.get('/signup', function(req, res) {
-  res.render('signup', {authed: false});
+  res.render('signup');
 });
 
 app.post('/signup', function(req, res) {
