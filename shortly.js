@@ -13,6 +13,20 @@ var Click = require('./app/models/click');
 
 var app = express();
 
+var restrict = function(req, res) {
+  if (!req.session.user) {
+    res.redirect('/login');
+  }
+};
+
+var createSession = function(req, res, username) {
+  req.session.regenerate(function(err) {
+    if (err) throw err;
+    req.session.user = username;
+    res.redirect('/');
+  });
+};
+
 app.set('views', __dirname + '/views');
 app.set('view engine', 'ejs');
 app.use(partials());
@@ -25,23 +39,26 @@ app.use(session({
   secret: 'mouserat'
 }));
 
-app.use(function(req, res, next) {
-  console.log(req.session.user);
-  next();
-});
+// app.use(function(req, res, next) {
+//   console.log(req.session.user);
+//   next();
+// });
 
 app.get('/',
 function(req, res) {
+  restrict(req, res);
   res.render('index');
 });
 
 app.get('/create',
 function(req, res) {
+  restrict(req, res);
   res.render('index');
 });
 
 app.get('/links',
 function(req, res) {
+  restrict(req, res);
   Links.reset().fetch().then(function(links) {
     res.send(200, links.models);
   });
@@ -49,6 +66,7 @@ function(req, res) {
 
 app.post('/links',
 function(req, res) {
+  restrict(req, res);
   var uri = req.body.url;
 
   if (!util.isValidUrl(uri)) {
@@ -92,29 +110,19 @@ app.post('/login', function(req, res) {
   var username = req.body.username;
   var password = req.body.password;
 
-  // check database for existing user
-
   // password = hashed(password);
+
+  // Check that user exists and hashed password matches
   new User ({username: username, password: password}).fetch().then(function(found) {
     if (found) {
       // your authed bro
       // create a session? log into session?
-      req.session.regenerate(function(err) {
-        if (err) throw err;
-        req.session.user = username;
-        res.redirect('/');
-      });
+      createSession(req, res, username);
     } else {
       // failcake
-      res.send(404, 'Invalid username and password.');
+      res.redirect('/login');
     }
   });
-    // verify password is correct
-      // alert user to incorrect password
-
-      // or login
-
-  // alert to incorrect login
 
 });
 
@@ -136,7 +144,7 @@ app.post('/signup', function(req, res) {
 
       user.save().then(function(user) {
         Users.add(user);
-        res.send(200, user);
+        createSession(req, res, username);
       });
     }
   });
