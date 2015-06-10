@@ -14,12 +14,11 @@ var Click = require('./app/models/click');
 
 var app = express();
 
-// TODO: localize to user model
-// var salt = bcrypt.genSaltSync(10);
-
-var authorize = function(req, res) {
+var authorize = function(req, res, next) {
   if (!req.session.user) {
     res.redirect('/login');
+  } else {
+    next();
   }
 };
 
@@ -43,34 +42,26 @@ app.use(session({
   secret: 'mouserat'
 }));
 
-// app.use(function(req, res, next) {
-//   console.log(req.session.user);
-//   next();
-// });
 
-app.get('/',
+app.get('/', authorize,
 function(req, res) {
-  authorize(req, res);
   res.render('index');
 });
 
-app.get('/create',
+app.get('/create', authorize,
 function(req, res) {
-  authorize(req, res);
   res.render('index');
 });
 
-app.get('/links',
+app.get('/links', authorize,
 function(req, res) {
-  authorize(req, res);
   Links.reset().fetch().then(function(links) {
     res.send(200, links.models);
   });
 });
 
-app.post('/links',
+app.post('/links', authorize,
 function(req, res) {
-  authorize(req, res);
   var uri = req.body.url;
 
   if (!util.isValidUrl(uri)) {
