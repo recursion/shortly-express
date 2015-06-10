@@ -5,7 +5,14 @@ Shortly.Router = Backbone.Router.extend({
 
   routes: {
     '':       'index',
-    'create': 'create'
+    'create': 'create',
+    'login': 'login'
+  },
+
+  login: function() {
+    // point to login view
+    console.log('login view called at router');
+    this.swapView(new Shortly.loginView());
   },
 
   swapView: function(view){

@@ -3,6 +3,7 @@
   <ul>
     <li><a href='#' class='index'>All Links</a></li>
     <li><a href='#' class='create'>Shorten</a></li>
+    <li><a href='#' class='login'>Login</a></li>
     <li><a href="/logout">Logout</a></li>
   </ul>
   </div>
@@ -30,6 +31,26 @@
   <div class='message'></div>
 </script>
 
+<script id='login' type='text/x-handlebars-template'>
+  <h2>###Login</h2>
+  <form action="/login" method="post">
+      <div>
+        <label for="username">Username:</label>
+        <input id="username" type="text" name="username">
+      </div>
+      <div>
+        <label for="password">Password:</label>
+        <input id="password" type="password" name="password">
+      </div>
+      <div>
+        <input type="submit" value="Login">
+      </div>
+  </form>
+  <p>
+    <a href="/signup">Create an Account &rarr;</a>
+  <p>
+</script>
+
 <script>
   $(function(){
     new Shortly();
@@ -46,5 +67,6 @@
 <script src='/client/links.js'></script>
 <script src='/client/linkView.js'></script>
 <script src='/client/linksView.js'></script>
+<script src='/client/login.js'></script>
 <script src='/client/createLinkView.js'></script>
 <script src='/client/router.js'></script>

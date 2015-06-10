@@ -130,12 +130,14 @@ app.post('/login', function(req, res) {
           createSession(req, res, username);
         } else {
           //failcake
-          res.redirect('/login');
+          // res.redirect('/login');
+          res.json({status: 'Invalid Login Credentials'});
         }
       });
     } else {
       // failcake
-      res.redirect('/login');
+      // res.redirect('/login');
+      res.json({status: 'Invalid Login Credentials'});
     }
   });
 
